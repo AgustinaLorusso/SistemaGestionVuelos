@@ -300,7 +300,7 @@ def crearVuelo():
             "avion": avion
     }
 
-    cargar_json("vuelos.json",idVuelo,vuelo)
+    cargar_json("data/vuelos.json",idVuelo,vuelo)
 
    
         
@@ -322,12 +322,17 @@ def crearVuelo():
 def modificarVuelo():
 
     """Funcion que permite al administrador modificar Fecha/Hora de un vuelo """
+    
     idVuelo= validar_nroVuelo()
-    with open ("vuelos.json","r",encoding="utf-8") as archivo:
+    idVuelo = str(idVuelo)
+    with open ("data/vuelos.json","r",encoding="utf-8") as archivo:
         vuelos = json.load(archivo)
     while idVuelo not in vuelos:
         print("El vuelo ingresado no existe")
-    vuelo = vuelos[idVuelo]
+        idVuelo= validar_nroVuelo()
+        idVuelo = str(idVuelo)
+    
+    
     opciones=[1,2] #opciones de ingreso del usuario
 
     print("Ingrese el numero correspondiente al dato a modificar:\n" f"1. Fecha\n" f"2. Hora\n")
@@ -342,37 +347,43 @@ def modificarVuelo():
         #Invocamos funcion para pedir nueva fecha en que se quiere generar el vuelo.
         mes,dia=Asignacion_FechaVuelo()  
 
-        vuelo["fecha"]["mes"]= mes
-        vuelo["fecha"]["dia"] = dia
+        modificiar_archivo(1,"data/vuelos.json",idVuelo,"fecha", "mes",mes)
+        modificiar_archivo(1,"data/vuelos.json",idVuelo,"fecha","dia",dia)
+
+        with open ("data/vuelos.json","r",encoding="utf-8") as archivo:
+            vuelos = json.load(archivo)
+        vuelo = vuelos[idVuelo]
 
         print("NUMERO DE VUELO:", idVuelo)
         print("\n--- RESUMEN DE VUELO MODIFICADO ---\n")
-        print("ORIGEN:", origen)
-        print("DESTINO:", destino )
+        print("ORIGEN:", vuelo["origen"])
+        print("DESTINO:", vuelo["destino"] )
         print("FECHA:", dia,"/", mes,"/",2026)
         
 
         print("Dia del vuelo se ha modificado con exito")
 
     else: #CASO DE QUERER MODIFICAR EL HORARIO
-        tipoVuelo= tipo_vuelo(origen,vuelo)
-        horario=seleccion_horario(tipoVuelo)
-        dia= vuelo[-4]
-        mes=vuelo[-3]
+        vuelo = vuelos [idVuelo]
+        horario=seleccion_horario()
+        tipoVuelo = vuelo["tipo"]
+        mes = vuelo ["fecha"]["dia"]
+        dia = vuelo["fecha"]["mes"]
         #VALIDAR EL AVION QUE ESTE DISPONIBLE A ESE HORARIO 
-        avion = asignacion_avion(origen, destino, dia, mes, horario)
+        avion = asignacion_avion(tipoVuelo, dia, mes, horario)
 
         if  avion == None:
             print("Vuelo no pudo ser modificado")
             print("Todos los aviones estan en uso para las condiciones ingresadas.")
         else:
-            vuelo[5]= horario
-            vuelo[6]= avion
 
+            modificiar_archivo(2,"data/vuelos.json",idVuelo,"horario",horario)
+            modificiar_archivo(2,"data/vuelos.json",idVuelo,"avion",dia)
+            
             print("\n--- RESUMEN DE VUELO MODIFICADO ---\n")
             print("NUMERO DE VUELO:", idVuelo)
-            print("ORIGEN:", origen)
-            print("DESTINO:", destino )
+            print("ORIGEN:", vuelo["origen"])
+            print("DESTINO:", vuelo["destino"])
             print("FECHA:", dia,"/", mes,"/",2026)
             print("HORARIO", horario)
            
