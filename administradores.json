@@ -1,0 +1,20 @@
+[
+    {
+        "nombre": "Lucas Fernandez",
+        "dni": 45678901,
+        "email": "lucas.fernandez@gmail.com",
+        "password": "lucas321"
+    },
+    {
+        "nombre": "Sofia Martinez",
+        "dni": 56789012,
+        "email": "sofia.martinez@gmail.com",
+        "password": "sofia654"
+    },
+    {
+        "nombre": "Diego Alvarez",
+        "dni": 67890123,
+        "email": "diego.alvarez@gmail.com",
+        "password": "diego987"
+    }
+]

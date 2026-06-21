@@ -1,9 +1,9 @@
 #IMPORTACIONES
 from .data import destinos ,vuelos, aviones
-from .validaciones import validaciones
-import calendar
-import random
+from .validaciones import validaciones, modificiar_archivo, cargar_json
+import calendar , random , json
 from functools import reduce
+
 
 
 #HORARIOS POSBILES PARA GENERAR VUELOS
@@ -287,9 +287,8 @@ def crearVuelo():
         #Miramos si esta sino volvemos a generar otro hasta que no se repita.
         while idVuelo in vuelo:
             idVuelo= random.randint(1000, 9999)
-
+    
     vuelo = {
-            "codigo": idVuelo,
             "origen": origen,
             "destino": destino,
 
@@ -298,11 +297,12 @@ def crearVuelo():
                 "mes": mes,
                 "anio": 2026
             },
-
             "avion": avion
     }
 
-    vuelos.append(vuelo)
+    cargar_json("vuelos.json",idVuelo,vuelo)
+
+   
         
     # MOSTRAR RESUMEN
 
@@ -319,68 +319,65 @@ def crearVuelo():
 
 
 #Funcion para modificar un vuelo 
+def modificarVuelo():
 
-#def modificarVuelo():
+    """Funcion que permite al administrador modificar Fecha/Hora de un vuelo """
+    idVuelo= validar_nroVuelo()
+    with open ("vuelos.json","r",encoding="utf-8") as archivo:
+        vuelos = json.load(archivo)
+    while idVuelo not in vuelos:
+        print("El vuelo ingresado no existe")
+    vuelo = vuelos[idVuelo]
+    opciones=[1,2] #opciones de ingreso del usuario
 
-    #"""Funcion que permite al administrador modificar Fecha/Hora de un vuelo """
-
-   # vuelo= validar_nroVuelo()
-   #idVuelo= vuelo[0]
-   #origen= vuelo[1]
-   #destino= vuelo[2]
-  
-    #opciones=[1,2] #opciones de ingreso del usuario
-
-    #print("Ingrese el numero correspondiente al dato a modificar:\n" f"1. Fecha\n" f"2. Hora\n")
+    print("Ingrese el numero correspondiente al dato a modificar:\n" f"1. Fecha\n" f"2. Hora\n")
     
-    #datoAmodificar= validaciones(opciones)
+    datoAmodificar= validaciones(opciones)
 
+    while datoAmodificar is False:
+        print("Ingrese el numero correspondiente al dato a modificar:\n" f"1. Fecha\n" f"2. Hora\n")
+        datoAmodificar= validaciones(opciones)
 
-    
-    #while datoAmodificar is False:
-        #print("Ingrese el numero correspondiente al dato a modificar:\n" f"1. Fecha\n" f"2. Hora\n")
-        #datoAmodificar= validaciones(opciones)
-
-    #if datoAmodificar==1:
+    if datoAmodificar==1:
         #Invocamos funcion para pedir nueva fecha en que se quiere generar el vuelo.
-        #mes,dia=Asignacion_FechaVuelo()  
+        mes,dia=Asignacion_FechaVuelo()  
 
-        #vuelo[-3]= mes
-        #vuelo[-4] = dia
+        vuelo["fecha"]["mes"]= mes
+        vuelo["fecha"]["dia"] = dia
 
-        #print("\n--- RESUMEN DE VUELO MODIFICADO ---\n")
-        #print("NUMERO DE VUELO:", idVuelo)
-        #print("ORIGEN:", origen)
-        #print("DESTINO:", destino )
-        #print("FECHA:", dia,"/", mes,"/",2026)
+        print("NUMERO DE VUELO:", idVuelo)
+        print("\n--- RESUMEN DE VUELO MODIFICADO ---\n")
+        print("ORIGEN:", origen)
+        print("DESTINO:", destino )
+        print("FECHA:", dia,"/", mes,"/",2026)
         
 
-        #print("Dia del vuelo se ha modificado con exito")
+        print("Dia del vuelo se ha modificado con exito")
 
-    #else: #CASO DE QUERER MODIFICAR EL HORARIO
-        #tipoVuelo= tipo_vuelo(origen,vuelo)
-        #horario=seleccion_horario(tipoVuelo)
-        #dia= vuelo[-4]
-        #mes=vuelo[-3]
+    else: #CASO DE QUERER MODIFICAR EL HORARIO
+        tipoVuelo= tipo_vuelo(origen,vuelo)
+        horario=seleccion_horario(tipoVuelo)
+        dia= vuelo[-4]
+        mes=vuelo[-3]
         #VALIDAR EL AVION QUE ESTE DISPONIBLE A ESE HORARIO 
-        #avion = asignacion_avion(origen, destino, dia, mes, horario)
+        avion = asignacion_avion(origen, destino, dia, mes, horario)
 
-        #if  avion == None:
-            #print("Vuelo no pudo ser modificado")
-            #print("Todos los aviones estan en uso para las condiciones ingresadas.")
-        #else:
-            #vuelo[5]= horario
-            #vuelo[6]= avion
+        if  avion == None:
+            print("Vuelo no pudo ser modificado")
+            print("Todos los aviones estan en uso para las condiciones ingresadas.")
+        else:
+            vuelo[5]= horario
+            vuelo[6]= avion
 
-            #print("\n--- RESUMEN DE VUELO MODIFICADO ---\n")
-            #print("NUMERO DE VUELO:", idVuelo)
-            #print("ORIGEN:", origen)
-            #print("DESTINO:", destino )
-            #print("FECHA:", dia,"/", mes,"/",2026)
-            #print("HORARIO", horario)
+            print("\n--- RESUMEN DE VUELO MODIFICADO ---\n")
+            print("NUMERO DE VUELO:", idVuelo)
+            print("ORIGEN:", origen)
+            print("DESTINO:", destino )
+            print("FECHA:", dia,"/", mes,"/",2026)
+            print("HORARIO", horario)
            
 
-            #print("Horario del vuelo se modifico con exito")
+            print("Horario del vuelo se modifico con exito")
 
 #Funcion para eliminar un vuelo
 
