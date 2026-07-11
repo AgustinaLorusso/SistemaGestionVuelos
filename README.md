@@ -10,12 +10,14 @@ Aplicación desarrollada en Python para administrar vuelos, pasajeros y reservas
 - Reserva de vuelos.
 - Validaciones de datos.
 - Persistencia de información.
+- Busqueda de vuelos con conexion si no hay existencia de vuelos directos
 
 ## Tecnologías
 
 - Python
 - Programación orientada a objetos
-- Archivos JSON
+- Archivos txt
+- Recursividad
 
 ## Conceptos aplicados
 
@@ -23,3 +25,4 @@ Aplicación desarrollada en Python para administrar vuelos, pasajeros y reservas
 - Manejo de excepciones.
 - Estructuras de datos.
 - Separación de responsabilidades.
+-Recursividad
