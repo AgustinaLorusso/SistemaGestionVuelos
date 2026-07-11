@@ -24,5 +24,5 @@ Aplicación desarrollada en Python para administrar vuelos, pasajeros y reservas
 - Modularización del código.
 - Manejo de excepciones.
 - Estructuras de datos.
-- Separación de responsabilidades.
+- Separación de responsabilidades
 -Recursividad
