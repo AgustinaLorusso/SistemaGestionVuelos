@@ -31,13 +31,19 @@ def validar_sn():
     
     return opcion 
 
-def modificiar_archivo(nombre_archivo, id, clave, valor):
+def modificiar_archivo(opcion,nombre_archivo, id, clave,valor,clave2 = None):
     #primero leer el archivo
     with open(nombre_archivo,"r", encoding= "utf-8") as archivo:
         nom_archivo = json.load(archivo) #lee desde un archivo
-    nom_archivo[id][clave]= valor
+    #para entrar a una dicionario dentro de dicionario
+    if opcion == 1 : 
+        nom_archivo[id][clave][clave2]= valor
+    #para un diccionario simple
+    elif opcion == 2:
+         nom_archivo[id][clave]= valor
     with open(nombre_archivo,"w", encoding= "utf-8") as archivo:
         json.dump(nom_archivo,archivo,indent=4)
+
 
 def cargar_json(nombre_archivo, id , datos):
     with open(nombre_archivo, "r", encoding="utf-8") as archivo:
@@ -45,6 +51,9 @@ def cargar_json(nombre_archivo, id , datos):
     nom_archivo[id] = datos #estan entre llaves.
     with open(nombre_archivo,"w", encoding= "utf-8") as archivo:
         json.dump(nom_archivo,archivo,indent=4)
+
+#Funcion para guardar contraseñas en hash / la ejecutamos una vez para generar el hash en cada una de las que ya teniamos
+
 
     
 

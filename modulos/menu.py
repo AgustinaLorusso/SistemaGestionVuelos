@@ -1,15 +1,13 @@
-# Importaciones
-
 from .gestionAsientos import *
 from .gestionReservas import crear_reserva, cancelar_reserva
-from .gestionPasajeros import buscar_reserva_por_numero
+from .gestionPasajeros import buscar_reserva_por_numero,hash_password, cargar_pasajeros
 from .consultas import *
 from .gestionVuelos import *
-from .data import administradores
 import re
+import time # se agrega el bloqueo por intentos
+
 
 # Funciones relacionadas con el menu de los distintos usuarios del sistema.
-
 
 def bienvenida():
     """Funcion de bienvenida al programa principal"""
@@ -59,9 +57,11 @@ def menu_Consultas_Administrador():
     print("3. Buscar pasajero por ID")
     print("4. Ver pasajeros por vuelo")
     print("5. Ver cantidad de vuelos por mes")
-    print("6. Volver al menú anterior")
+    print("6. Ver asientos disponibles")
+    print("7. Ver pasajero con más millas")
+    print("8. Volver al menú anterior")
 
-    opciones = [1, 2, 3, 4, 5, 6]
+    opciones = [1, 2, 3, 4, 5, 6, 7]
 
     # VALIDACION CON LA IMPORTADA DE GESTION DE VUELOS ( VALIDACION segun opciones )
     seleccion = validaciones(opciones)
@@ -70,41 +70,99 @@ def menu_Consultas_Administrador():
 
     return seleccion
 
+def cargar_administradores():
+    administradores = []
+
+    with open("data/administradores.txt", "r") as archivo:
+        for linea in archivo:
+            administradores.append(linea.strip().split(";"))
+
+    return administradores
 
 def login_administrador():
-    """Funcion de log in para administradores"""
+    """Permite iniciar sesión con usuario o email."""
 
-    # VALIDACIONES PARA EL INGRESO DEL MAIL
+    administradores = cargar_administradores()
+
+    intentos_fallidos = 0
+    bloqueado_hasta = 0
+
     while True:
-        email = input("\nEmail: ").strip().lower()
 
-        if not email:
-            print("El email no puede estar vacío.")
+        if time.time() < bloqueado_hasta:
+            segundos = int(bloqueado_hasta - time.time())
+
+            print(
+                f"\nDemasiados intentos fallidos."
+                f"\nEspere {segundos} segundos."
+            )
+
+            time.sleep(segundos)
             continue
 
-        if " " in email:
-            print("El email no puede contener espacios.")
+        identificador = input(
+            "\nIngrese email: "
+        ).strip().lower()
+
+        if identificador == "":
+            print("No puede dejar el campo vacío.")
             continue
 
-        if re.match(r"^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$", email) is None:
+        
+        if re.match(r"^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$", identificador) is None:
             print("Formato de email inválido.")
             continue
 
-        contraseña = input("Contraseña: ").strip()
-
-        login_ok = False
+        usuario_encontrado = None
 
         for administrador in administradores:
-            if administrador["email"] == email and administrador["password"] == contraseña:
-                print("\nLogin correcto.")
-                login_ok = True
+
+            email = administrador[2].lower()
+
+            if identificador == email:
+                usuario_encontrado = administrador
                 break
 
-        if login_ok:
-            break  # sale del while
+        if usuario_encontrado is None:
 
-        print("Credenciales incorrectas.")
+            print("Usuario o email no registrado.")
 
+            intentos_fallidos += 1
+
+            if intentos_fallidos >= 3:
+
+                bloqueado_hasta = time.time() + 60
+                intentos_fallidos = 0
+
+                print(
+                    "\nLogin bloqueado por 1 minuto."
+                )
+
+            continue
+
+        contraseña = input("Contraseña: ")
+
+        if usuario_encontrado[3] == hash_password(contraseña):
+
+            intentos_fallidos = 0
+
+            print("Login correcto.")
+            return usuario_encontrado
+
+        else:
+
+            print("Contraseña incorrecta.")
+
+            intentos_fallidos += 1
+
+            if intentos_fallidos >= 3:
+
+                bloqueado_hasta = time.time() + 60
+                intentos_fallidos = 0
+
+                print(
+                    "\nLogin bloqueado por 1 minuto."
+                )
 
 def administrador():
     """Gestiona las acciones disponibles para el administrador de la aerolínea, mostrando un menú de opciones y ejecutando la funcionalidad correspondiente según la selección del usuario."""
@@ -123,7 +181,8 @@ def administrador():
         elif seleccion == 2:
             eliminarVuelo()
             input("Presione enter para continuar...")
-
+        
+       
         elif seleccion == 3:
 
             while sesion_activa2:
@@ -151,8 +210,17 @@ def administrador():
                 elif seleccion == 5:
                     contar_vuelos_por_mes()
                     input("Presione enter para continuar...")
-
+                    
                 elif seleccion == 6:
+                    consultar_asientos_disponibles()
+                    input("Presione enter para continuar...")
+                    
+                elif seleccion == 7:
+                    pasajeros = cargar_pasajeros()
+                    p = pasajero_mayor_millas(pasajeros)
+                    print("Mayor cantidad de millas:", p[1], p[5])
+
+                elif seleccion == 8:
                     sesion_activa2 = False
 
         elif seleccion == 4:
@@ -213,20 +281,19 @@ def menuConsultas():  # Función para consultas del usuario
 
     return opcion  # Devuelve opción
 
-
 def usuario(pasajero):  # Función del usuario
     sesion_activa = True  # Sesión activa actúa como flag para saber si el usuario quiere continuar en el menu del cliente o volver al menú principal de bienvenida
     sesion_activa2 = True  # Sesión activa actúa como flag para saber si el usuario quiere continuar en el menu de consultas o volver al menú de cliente
-    dni = pasajero[1]  # Obtenemos dni de pasajero
+    dni = pasajero[2]  # Obtenemos dni de pasajero
 
     while sesion_activa == True:  # Bucle para continuar en menuCliente
         seleccion = menuCliente()
         sesion_activa2 = True  # Acá vuelvo a reiniciar la flag por si quiere generar una reserva y volver a menuConsultas, de lo contrario no le permitirá visualizar el menuConsultas
 
         if seleccion == "1":
-            crear_reserva(pasajero)  # llamo función para crear reserva
+            crear_reserva(dni, pasajero)  # llamo función para crear reserva
         if seleccion == "2":
-            cancelar_reserva(pasajero)  # llamo función para cancelar una reserva
+            cancelar_reserva(dni, pasajero)  # llamo función para cancelar una reserva
         if seleccion == "3":
             while sesion_activa2 == True:  # Bucle para continuar en menuConsultas
                 seleccion = menuConsultas()
@@ -242,7 +309,7 @@ def usuario(pasajero):  # Función del usuario
                     input("Presione enter para continuar...")
                 if seleccion == "3":
                     verMillas(
-                        pasajero
+                        dni
                     )  # llamo función para visualizar millas de un pasajero
                 if seleccion == "4":
                     verDatos(

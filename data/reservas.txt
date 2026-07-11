@@ -1,0 +1,14 @@
+1000;1013;micaela fiore;43903033;19;3;8;6;Sin equipaje;av13;1
+1001;1013;camila rondona;46635620;17;1;8;6;Sin equipaje;av13;1
+1002;1004;camila rondona;46635620;17;1;2;6;Sin equipaje;av4;2
+1004;1006;micaela fiore;43903033;19;2;3;6;Sin equipaje;av6;1
+1005;1057;daniel angel;21465049;5;3;8;7;Equipaje de mano;av3;internacional
+1006;1058;daniel angel;21465049;5;3;9;7;Equipaje de mano;av4;internacional
+1007;1067;daniel angel;21465049;1;2;10;8;Sin equipaje;av13;internacional
+1008;1068;daniel angel;21465049;3;2;10;8;Equipaje de mano;av14;internacional
+1009;1069;daniel angel;21465049;2;1;11;8;Sin equipaje;av15;internacional
+1010;1075;daniel angel;21465049;3;1;9;9;Sin equipaje;av5;internacional
+1011;1076;daniel angel;21465049;5;2;9;9;Equipaje de bodega;av6;internacional
+1012;1083;daniel angel;21465049;1;8;11;10;Equipaje de mano;av13;internacional
+1013;1081;daniel angel;21465049;14;1;8;10;Sin equipaje;av11;internacional
+1014;1085;daniel angel;21465049;19;2;12;10;Sin equipaje;av15;internacional

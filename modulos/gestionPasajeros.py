@@ -1,9 +1,75 @@
-# lista para guardar todos los pasajeros registrados
-from .data import reservas, pasajeros
+import hashlib
+import re
+import time # se agrega el bloqueo por intentos
+
+# --- HELPERS DE SEGURIDAD ---
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def validar_password(password):
+    if len(password) < 8:
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"[0-9]", password):
+        return False
+    return True
+
+def cargar_pasajeros():
+    pasajeros = []
+
+    with open("data/pasajeros.txt", "r") as archivo:
+        for linea in archivo:
+            pasajeros.append(linea.strip().split(";"))
+
+    return pasajeros
+
+
+def guardar_pasajeros(pasajeros):
+    with open("data/pasajeros.txt", "w") as archivo:
+        for p in pasajeros:
+            archivo.write(";".join(map(str, p)) + "\n")
+            
+def cargar_reservas():
+    reservas = []
+
+    with open("data/reservas.txt", "r") as archivo:
+        for linea in archivo:
+            reservas.append(linea.strip().split(";"))
+
+    return reservas
 
 def validar_datos():
     """Valida los datos ingresados por el usuario antes de registrar un pasajero."""
 
+    pasajeros = cargar_pasajeros()
+
+    # CONJUNTOS PARA DETECTAR REPETIDOS
+
+    usuarios_registrados = {p[0].lower() for p in pasajeros}
+    dnis_registrados = {p[2] for p in pasajeros}
+    emails_registrados = {p[3].lower() for p in pasajeros}
+    
+    # VALIDAR USUARIO
+    while True:
+        usuario = input("Ingrese nombre de usuario: ").strip().lower()
+
+        if len(usuario) < 4:
+            print("Error: el usuario debe tener al menos 4 caracteres.")
+            continue
+
+        if " " in usuario:
+            print("Error: el usuario no puede contener espacios.")
+            continue
+
+        if usuario in usuarios_registrados:
+            print("Error: ese nombre de usuario ya existe.")
+            continue
+
+        break
+    
     # VALIDAR NOMBRE
     while True:
         nombre = input("Ingrese nombre y apellido: ").strip()
@@ -27,21 +93,15 @@ def validar_datos():
     while True:
         dni = input("Ingrese su DNI (todo junto y sin puntos): ").strip()
 
-        if not dni.isdigit(): #asegura que solo haya números    
+        if not dni.isdigit(): #asegura que solo hayy 9 a números    
             print("Error: el DNI debe contener SOLO números, sin puntos ni espacios.")
             continue
 
-        if len(dni) not in [7, 8, 9]:
-            print("Error: el DNI debe tener entre 7 y 9 dígitos.")
+        if len(dni) not in [6, 7, 8]:
+            print("Error: el DNI debe tener entre 6 y 8dígitos.")
             continue
     
-        repetido = False
-        for pasajero in pasajeros:
-            if pasajero[1] == dni:
-                repetido = True
-                break
-
-        if repetido:
+        if dni in dnis_registrados:
             print("Error: ese DNI ya está registrado.")
             continue
 
@@ -71,14 +131,7 @@ def validar_datos():
             print("Error: el email debe terminar en .com o .com.ar")
             continue
 
-        # VALIDAR REPETIDOS
-        repetido = False
-        for pasajero in pasajeros:
-            if pasajero[2] == email:
-                repetido = True
-                break
-
-        if repetido:
+        if email in emails_registrados:
             print("Error: ese email ya existe.")
             continue
 
@@ -86,31 +139,36 @@ def validar_datos():
 
     # VALIDAR CONTRASEÑA
     while True:
-        contraseña = input("Ingrese contraseña (mínimo 6 caracteres): ")
+        contraseña = input("Ingrese contraseña (mínimo 8 caracteres, mayúscula, minúscula y número): ")
 
-        if len(contraseña) >= 6 and contraseña.strip() != "":
+        if validar_password(contraseña):
             break
 
-        print("Error: la contraseña debe tener al menos 6 caracteres.")
+        print("Contraseña débil.")
 
     # CREAR CAMPO MILLAS
     millas = 0
 
-    return [nombre, dni, email, contraseña, millas]
+    return [usuario,nombre, dni, email, hash_password(contraseña), millas]
 
 
 def registrar_pasajero():
-    """Registra un nuevo pasajero."""
     print("\n--- REGISTRO DE PASAJERO ---")
+
+    pasajeros = cargar_pasajeros()
 
     pasajero = validar_datos()
     pasajeros.append(pasajero)
+
+    guardar_pasajeros(pasajeros)
 
     print("Pasajero registrado correctamente.\n")
 
 
 def buscar_reserva_por_numero(pasajero):
     """Busca una reserva a partir de su número de reserva."""
+    
+    reservas = cargar_reservas()
     
     while True:
         entrada = input("\nIngrese el número de reserva que desea buscar: ").strip()
@@ -127,8 +185,8 @@ def buscar_reserva_por_numero(pasajero):
         break
 
     for reserva in reservas:
-        if reserva[0] == numero_reserva:
-            if reserva[3] != pasajero[1]:
+        if int(reserva[0]) == numero_reserva:
+            if reserva[3] != pasajero[2]:
                 print("Esa reserva no te pertenece, solo podés visualizar reservas propias.\n")
                 return
             else:
@@ -148,114 +206,105 @@ def buscar_reserva_por_numero(pasajero):
     print("No se encontró ninguna reserva con ese número.\n")
     
 def buscar_pasajero_por_dni(dni):
-    """Busca un pasajero según su DNI."""
+    pasajeros = cargar_pasajeros()
+
     for pasajero in pasajeros:
-        if pasajero[1] == dni:
+        if pasajero[2] == dni:
             return pasajero
+
     return None
 
 
 def login_cliente():
-    """Permite iniciar sesión al cliente y ofrece la opción de crear una cuenta."""
+    """Permite iniciar sesión con usuario o email."""
+
+    pasajeros = cargar_pasajeros()
+
+    intentos_fallidos = 0
+    bloqueado_hasta = 0
+
     while True:
 
-        while True:
-            email = input("\nEmail: ").strip().lower()
+        if time.time() < bloqueado_hasta:
+            segundos = int(bloqueado_hasta - time.time())
 
-            if email == "" or " " in email or email.count("@") != 1:
-                print("El email es inválido.")
-                continue
+            print(
+                f"\nDemasiados intentos fallidos."
+                f"\nEspere {segundos} segundos."
+            )
 
-            parte1, parte2 = email.split("@")
+            time.sleep(segundos)
+            continue
 
-            if parte1 == "" or parte2 == "" or "." not in parte2:
-                print("El email es inválido.")
-                continue
+        identificador = input(
+            "\nIngrese usuario o email: "
+        ).strip().lower()
 
-            # VALIDAR PROVEEDOR
-            if not (parte2.startswith("gmail") or parte2.startswith("hotmail") or parte2.startswith("yahoo")):
-                print("Solo se permiten emails de gmail, hotmail o yahoo.")
-                continue
-
-            # VALIDAR TERMINACIÓN
-            if not (parte2.endswith(".com") or parte2.endswith(".com.ar")):
-                print("El email debe terminar en .com o .com.ar")
-                continue
-
-            break
+        if identificador == "":
+            print("No puede dejar el campo vacío.")
+            continue
 
         usuario_encontrado = None
+
         for pasajero in pasajeros:
-            if pasajero[2] == email:
+
+            usuario = pasajero[0].lower()
+            email = pasajero[3].lower()
+
+            if identificador == usuario or identificador == email:
                 usuario_encontrado = pasajero
                 break
 
         if usuario_encontrado is None:
-            print("Ese email no está registrado.")
 
-            opcion = input("¿No tiene cuenta? Crear cuenta (s/n): ").lower()
+            print("Usuario o email no registrado.")
+
+            intentos_fallidos += 1
+
+            if intentos_fallidos >= 3:
+
+                bloqueado_hasta = time.time() + 60
+                intentos_fallidos = 0
+
+                print(
+                    "\nLogin bloqueado por 1 minuto."
+                )
+
+            opcion = input(
+                "¿Desea crear una cuenta? (s/n): "
+            ).lower()
+
             while opcion not in ["s", "n"]:
-                print("Error: elija una opción válida.")
-                opcion = input("¿No tiene cuenta? Crear cuenta (s/n): ").lower()
+                opcion = input(
+                    "¿Desea crear una cuenta? (s/n): "
+                ).lower()
 
             if opcion == "s":
                 registrar_pasajero()
-            else:
-                print("Intente nuevamente.")
+                pasajeros = cargar_pasajeros()
+
             continue
 
-        while True:
-            contraseña = input("Contraseña: ")
+        contraseña = input("Contraseña: ")
 
-            if len(contraseña) >= 6 and contraseña.strip() != "":
-                break
-            else:
-                print("La contraseña debe contener mínimo 6 caracteres.")
+        if usuario_encontrado[4] == hash_password(contraseña):
 
-        if usuario_encontrado[3] == contraseña:
+            intentos_fallidos = 0
+
             print("Login correcto.")
             return usuario_encontrado
+
         else:
+
             print("Contraseña incorrecta.")
 
+            intentos_fallidos += 1
 
-def consulta_reserva():
-    """Muestra los datos de una reserva existente a partir de su número."""
+            if intentos_fallidos >= 3:
 
-    while True:
-        numero_reserva = input("Ingrese su número de reserva: ").strip()
+                bloqueado_hasta = time.time() + 60
+                intentos_fallidos = 0
 
-        if numero_reserva.isdigit():
-            numero_reserva = int(numero_reserva)
-            break
-
-        print("Error: debe ingresar solo números.")
-
-    reserva = buscar_reserva_por_numero(numero_reserva)
-
-    if reserva is None:
-        print("No se encontró una reserva con ese número.")
-        return
-    
-    if reserva[3] != pasajero[1]:
-        print("Esa reserva no te pertenece.")
-        return
-    
-    
-    dni_reserva = reserva[3]
-    pasajero = buscar_pasajero_por_dni(dni_reserva)
-
-    if pasajero is None:
-        print("No se encontró el pasajero asociado a la reserva.")
-        return
-
-    print("\n--- INFORMACIÓN ---")
-    print("Reserva Nº:", reserva[0])
-    print("Vuelo:", reserva[1])
-    print("Pasajero:", reserva[2])
-    print("DNI:", reserva[3])
-    print("Fila:", reserva[4], "Columna:", reserva[5])
-    print("Día/Mes:", reserva[6], "/", reserva[7])
-    print("Equipaje:", reserva[8])
-    print("Avión:", reserva[9])
-    print("------------------------")
+                print(
+                    "\nLogin bloqueado por 1 minuto."
+                )

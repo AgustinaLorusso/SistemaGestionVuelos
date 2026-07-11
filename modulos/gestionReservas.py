@@ -1,282 +1,629 @@
-from .gestionVuelos import vuelos
-from .gestionAsientos import mostrar_matriz, reservar_asiento, matrices_aviones
-from .data import reservas, contador_reserva, destinos
+from .gestionAsientos import  reservar_asiento, liberar_asiento
 from .consultas import sumarMillas, canjear_millas, restarMillas
+from .gestionAsientos import cargar_matrices_aviones, reservar_asiento, liberar_asiento, guardar_aviones, mostrar_matriz_avion
+from .gestionVuelos import cargar_vuelos,seleccion_OrigenDestino
 
-def crear_reserva(pasajero):
-    print("\n--- NUEVA RESERVA ---")
+# ─────────────────────────────────────────────
+# AVIONES (PERSISTENCIA)
+# ─────────────────────────────────────────────
 
-    # 1. BUSCAR PASAJERO
-    nombre = pasajero [0]
-    dni = pasajero[1]
-    email = pasajero[2]
+aviones = cargar_matrices_aviones()
+vuelos = cargar_vuelos()
 
-    #SELECCIÓN DE VUELO
-    # 1. Elegir origen desde lista cerrada
-    print("\nSeleccione origen:\n")
-    for i in range(len(destinos)):
-        print(i, "-", destinos[i])
+
+# ─────────────────────────────────────────────
+# RESERVAS
+# ─────────────────────────────────────────────
+
+def cargar_reservas():
+    reservas = {}
+
+    try:
+        with open("data/reservas.txt", "r", encoding="utf-8") as f:
+            for linea in f:
+                if not linea.strip():
+                    continue
+
+                partes = linea.strip().split(";")
+
+                reservas[partes[0]] = {
+                    "id_vuelo": partes[1],
+                    "nombre": partes[2],
+                    "dni": partes[3],
+                    "fila": int(partes[4]),
+                    "columna": int(partes[5]),
+                    "dia": partes[6],
+                    "mes": partes[7],
+                    "equipaje": partes[8],
+                    "avion": partes[9],
+                    "tipo": partes[10]
+                }
+    except FileNotFoundError:
+        return {}
+
+    return reservas
+
+
+def guardar_reservas(reservas):
+    with open("data/reservas.txt", "w", encoding="utf-8") as f:
+        for id_reserva, r in reservas.items():
+            f.write(";".join([
+                str(id_reserva),
+                str(r["id_vuelo"]),
+                r["nombre"],
+                r["dni"],
+                str(r["fila"]),
+                str(r["columna"]),
+                str(r["dia"]),
+                str(r["mes"]),
+                r["equipaje"],
+                str(r["avion"]),
+                str(r["tipo"])
+            ]) + "\n")
+
+
+def cargar_contador():
+    try:
+        with open("data/contador.txt", "r", encoding="utf-8") as f:
+            _, valor = f.readline().strip().split("=")
+            return int(valor)
+    except:
+        return 1010
+
+
+def guardar_contador(valor):
+    with open("data/contador.txt", "w", encoding="utf-8") as f:
+        f.write(f"contador_reserva={valor}")
+
+
+# ─────────────────────────────────────────────
+# ESTADO EN MEMORIA
+# ─────────────────────────────────────────────
+
+reservas = cargar_reservas()
+
+destinos = [
+    "BUENOS AIRES, ARGENTINA",
+    "MENDOZA, ARGENTINA",
+    "SANTA CRUZ, ARGENTINA",
+    "MADRID, ESPAÑA",
+    "PEKÍN, CHINA",
+    "ROMA, ITALIA",
+    "LYON, FRANCIA",
+    "BOGOTA, COLOMBIA",
+    "CARACAS, VENEZUELA"
+]
+
+
+
+#---------------------------------
+# FUNCIONES PARA MODULARIZAR
+#--------------------------------
+
+#FUNCIONES
+def seleccionar_asiento(matriz):
+
+    mostrar_matriz_avion(matriz)
 
     while True:
-        opcion = input("\nSeleccione origen: ").strip()
-        if opcion.isdigit() and int(opcion) in range(len(destinos)):
-            opcion = int(opcion)
-            break
-        print("Opción inválida, ingrese un número del 0 al", len(destinos) - 1)
-
-    origen = destinos[opcion]               
-
-
-    if "ARGENTINA" in origen:
-        pais_origen = "ARGENTINA"
-    elif "ESPAÑA" in origen:
-        pais_origen = "ESPAÑA"
-    elif "CHINA" in origen:
-        pais_origen = "CHINA"
-            
-    #Tipo de vuelo
-    print("\nTipos de vuelo:\n")
-    print("1. Vuelos con destino nacional")
-    print("2. Vuelos con destino internacional\n")
-
-    tipo = input("Seleccione una opción: ")
-
-    while tipo not in ["1", "2"]:
-        print("Opción inválida")
-        tipo = input("Seleccione: ")
-        
-    print("\nVuelos disponibles:\n")
-
-    #implementación de FILTER
-    pais_origen = origen.split(",")[1]
-    vuelos_disponibles = list(filter(
-    lambda vuelo: vuelo[1] == origen and (
-        (tipo == "1" and vuelo[2].split(",")[1] == pais_origen and vuelo[2] != origen) or
-        (tipo == "2" and vuelo[2].split(",")[1] != pais_origen)
-    ),
-    vuelos
-    ))
-                    
-    if len(vuelos_disponibles) == 0:
-       print("No hay vuelos disponibles para esa selección.")
-       return
-   
-    #implementación de MAP()
-    def mostrar_vuelo(v):
-        return f"{v[0]} | {v[1]} → {v[2]} | {v[3]}/{v[4]} | {v[5]} hs"
-
-    vuelos_mostrables = list(map(mostrar_vuelo, vuelos_disponibles))
-
-    for i in range(len(vuelos_mostrables)):
-        print(i, "-", vuelos_mostrables[i])
-
-    while True:
-        opcion = input("\nSeleccione vuelo: ").strip()
-        if opcion.isdigit() and int(opcion) in range(len(vuelos_disponibles)):
-            opcion = int(opcion)
-            break
-        print("Opción inválida, ingrese un número del 0 al", len(vuelos_disponibles) - 1)
-
-    vuelo_elegido = vuelos_disponibles[opcion] 
-
-    for reserva in reservas:
-        if reserva[1] == vuelo_elegido[0] and reserva[3] == dni:
-            print("\nYa tenés una reserva para este vuelo.")
-            input("Presione enter para continuar...")
-            return
-    
-    # 5. ELEGIR ASIENTO
-    matriz = matrices_aviones[vuelo_elegido[6]]
-    mostrar_matriz(matriz)
-
-    while True:
-        entrada = input("\nSeleccione fila y columna (ej: 3,5): ")
-        partes = entrada.split(",")
-
-        if len(partes) != 2:
-            print("Error: debe ingresar dos valores separados por coma (ej: 3,5)")
-            continue
-
         try:
-            fila = int(partes[0].strip())
-            columna = int(partes[1].strip())
-        except ValueError:
-            print("Error: ambos valores deben ser números")
-            continue
+            entrada = input("Fila,Columna: ")
+            f, c = entrada.split(",")
 
-        if fila < 1 or columna < 1 or fila > 27 or columna > 7:
-            print("Error: asiento fuera de rango. Ingrese otro.")
-            continue
+            fila = int(f)
+            columna = int(c)
 
-        if reservar_asiento(matriz, fila, columna):
-            break
+            if fila < 1 or fila > len(matriz):
+                print("Fila fuera de rango.")
+                continue
+
+            if columna < 1 or columna > len(matriz[0]):
+                print("Columna fuera de rango.")
+                continue
+
+            if matriz[fila-1][columna-1] == "R":
+                print("Asiento ocupado.")
+                continue
+
+            if matriz[fila-1][columna-1] == "D":
+                print("Asiento seleccionado correctamente.")
+                return fila, columna
+
+        except:
+            print("Formato inválido. Ejemplo: 5,3")
 
 
-    # 6. ELEGIR EQUIPAJE
-    tipo_equipaje = None
+def seleccionar_equipaje():
 
-    while tipo_equipaje is None:
-        print("\nSeleccione tipo de equipaje:")
-        print("1. Sin equipaje")
-        print("2. Equipaje de mano: $10.000")
-        print("3. Equipaje bodega: $20.000")
+    print("\nEquipaje:")
+    print("1 - Sin equipaje")
+    print("2 - Equipaje de mano $10.000")
+    print("3 - Equipaje de bodega $20.000")
 
-        opcion = input("\nOpción: ")
+    op = input("Opción: ")
 
-        if opcion == "1":
-            tipo_equipaje = "Sin equipaje"
-        elif opcion == "2":
-            tipo_equipaje = "Equipaje de mano"
-        elif opcion == "3":
-            tipo_equipaje = "Equipaje bodega"
+    equipaje = {
+        "1": "Sin equipaje",
+        "2": "Equipaje de mano",
+        "3": "Equipaje de bodega"
+    }.get(op, "Sin equipaje")
+
+    return equipaje
+
+def calcular_precio(ruta_elegida, vuelos_mes, equipaje):
+
+    precio = 0
+
+    for id_vuelo in ruta_elegida:
+
+        vuelo = vuelos_mes[id_vuelo]
+
+        if vuelo["tipo"] == "nacional":
+            precio += 70000
         else:
-            print("Opción inválida, intente nuevamente.")
+            precio += 140000
 
-    # 7. CALCULAR PRECIO
-    recargos = {
-        "Sin equipaje": 0,
-        "Equipaje de mano": 10000,
-        "Equipaje bodega": 20000
-    }
+    if equipaje == "Equipaje de mano":
+        precio += 10000
 
-    #utilización de función LAMBDA 
+    elif equipaje == "Equipaje de bodega":
+        precio += 20000
 
-    calcular_total = lambda base, equipaje: base + recargos[equipaje] 
+    return precio
 
-    if tipo == "1":
-            precio_pasaje = 70000
-    else:
-        precio_pasaje = 140000
-
-    precio_total = calcular_total(precio_pasaje, tipo_equipaje)
-    
-    while True:
-        usar_millas = input("\n¿Desea usar millas? (s/n): ").lower()
-
-        if usar_millas == "s":
-            descuento = canjear_millas(pasajero)
-            precio_total -= descuento
-            break
-
-        elif usar_millas == "n":
-            break
-
-        else:
-            print("Entrada inválida, ingrese 's' o 'n'")
-
-    if precio_total < 0:
-        precio_total = 0
-        
-    # 8. MOSTRAR RESUMEN
-    print("\n--- RESUMEN ---")
-    print("Pasajero:", nombre)
-    print("Vuelo:", vuelo_elegido[1], "→", vuelo_elegido[2])
-    print("Asiento:", fila, "-", columna)
-    print("Fecha:", vuelo_elegido[3], "/", vuelo_elegido[4])
-    print("Hora:", vuelo_elegido[5])
-    print("Equipaje:", tipo_equipaje)
-    print("Total:", precio_total)
-
+def aplicar_millas(precio, dni_pasajero):
 
     while True:
+
+        usar = input("¿Desea usar sus millas? (s/n): ").lower()
+
+        if usar in ["s","n"]:
+            break
+
+        print("Ingrese únicamente s o n.")
+
+    if usar == "s":
+
+        descuento = canjear_millas(dni_pasajero)
+
+        precio -= descuento
+
+        if precio < 0:
+            precio = 0
+
+    return precio
+
+def confirmar_compra(nombre, ruta_elegida, equipaje, precio, vuelos_mes):
+
+    print("\n" + "=" * 45)
+    print("          RESUMEN DE LA RESERVA")
+    print("=" * 45)
+
+    print(f"\nPasajero: {nombre}")
+
+    print("\nRecorrido:")
+
+    for i, id_vuelo in enumerate(ruta_elegida):
+
+        vuelo = vuelos_mes[id_vuelo]
+
+        print(f"\nVuelo {id_vuelo}")
+        print(f"  Origen : {vuelo['origen']}")
+        print(f"  Destino: {vuelo['destino']}")
+        print(f"  Fecha  : {vuelo['dia']}/{vuelo['mes']}/{vuelo['anio']}")
+        print(f"  Hora   : {vuelo['hora']}")
+        print(f"  Tipo   : {vuelo['tipo'].capitalize()}")
+
+        if i < len(ruta_elegida) - 1:
+            print("           ↓ CONEXIÓN ↓")
+
+    print(f"\nEquipaje: {equipaje}")
+
+    print(f"\nTotal a pagar: ${precio:,}".replace(",", "."))
+
+    print("=" * 45)
+
+    while True:
+
         confirmar = input("\n¿Confirmar reserva? (s/n): ").lower()
 
-        if confirmar == "s":
-            break
+        if confirmar in ["s", "n"]:
+            return confirmar == "s"
 
-        elif confirmar == "n":
-            print("Reserva cancelada.")
-            return
+        print("Ingrese únicamente s o n.")
+        
+def realizar_pago(precio):
 
-        else:
-            print("Entrada inválida, ingrese 's' o 'n'")
+    print("\nMétodos de pago")
+    print("1 - Dinero en cuenta")
+    print("2 - QR Mercado Pago")
 
-    # 9. GUARDAR RESERVA
-    id_reserva = contador_reserva[0]
-    contador_reserva[0] += 1
+    metodo = input("Seleccione método: ")
 
-    nueva_reserva = [
-        id_reserva,
-        vuelo_elegido[0],
-        nombre,
-        dni,
-        fila,
-        columna,
-        vuelo_elegido[3],
-        vuelo_elegido[4],
-        tipo_equipaje,
-        vuelo_elegido[6], 
-        tipo  
-    ]
+    if metodo == "1":
 
+        saldo = float(input("Ingrese saldo disponible: "))
 
-    reservas.append(nueva_reserva)
-    
-    sumarMillas(pasajero, vuelo_elegido)
+        if saldo < precio:
+            print("Saldo insuficiente.")
+            return False
 
-    print("Reserva creada correctamente. Nº:", id_reserva)
-    input("Presione enter para continuar...")
-
-
-# ─────────────────────────────────────────────
-# CANCELAR RESERVA
-# ─────────────────────────────────────────────
-def liberar_asiento(matriz, fila, columna):
-    fila -= 1
-    columna -= 1
-
-    if matriz[fila][columna] == "R":
-        matriz[fila][columna] = "D"
+        print("Pago realizado correctamente.")
         return True
+
+    elif metodo == "2":
+
+        print("\n--- QR DE PAGO ---")
+
+        print("""
+        ███████████████████████████
+        ██ ▄▄▄▄▄ █▀▀ ▄ ▀█ ▄▄▄▄▄ ███
+        ██ █   █ █▄▀▄█▀▄█ █   █ ███
+        ██ █▄▄▄█ █ ▀ █ ▄█ █▄▄▄█ ███
+        ██▄▄▄▄▄▄▄█ ▀ ▀ █▄█▄▄▄▄▄▄▄██
+        ██ ▄▀▄ ▄▄ ▀█▄▀ ▀ ▄▄▀▄▀▄ ███
+        ██▀ ▄▄▀▄▄▄█▀▀▀▄█▄▀█ ▄ ▀████
+        ██ ▄▄▄▄▄ █▀█ ▄ ▄▀▀▀▄█▄ ████
+        ██ █   █ █▄▀█▀▄▄█ ▄▄ ▄█████
+        ██ █▄▄▄█ █ ▄█ ▄▀ ▄█▀▄▀█████
+        ██▄▄▄▄▄▄▄█▄██▄▄█▄▄█▄▄▄█████
+        ███████████████████████████
+        """)
+
+        input("Escanee el QR y presione ENTER...")
+
+        print("Pago acreditado.")
+
+        return True
+
+    print("Método inválido.")
 
     return False
 
-def cancelar_reserva(pasajero):
+def guardar_reserva(contador, id_vuelo, nombre, dni, fila, columna, equipaje, vuelo, id_avion, tipo):
+
+    reservas = cargar_reservas()
+
+    reservas[str(contador)] = {
+
+        "id_vuelo": id_vuelo,
+        "nombre": nombre,
+        "dni": dni,
+        "fila": fila,
+        "columna": columna,
+        "dia": vuelo["dia"],
+        "mes": vuelo["mes"],
+        "anio": vuelo["anio"],
+        "equipaje": equipaje,
+        "avion": id_avion,
+        "tipo": tipo
+    }
+
+    guardar_reservas(reservas)
+
+    guardar_contador(contador+1)
+
+
+
+
+def cargar_vuelos():
+    vuelos = {}
+
+    with open("data/vuelos.txt", "r", encoding="utf-8") as archivo:
+        for linea in archivo:
+            linea = linea.strip()
+
+            if not linea:
+                continue
+
+            datos = linea.split(";")
+
+            id_vuelo = datos[0].strip()
+
+            vuelos[id_vuelo] = {
+                "tipo": datos[1].strip(),
+                "origen": datos[2].strip(),
+                "destino": datos[3].strip(),
+                "dia": datos[4].strip(),
+                "mes": datos[5].strip(),
+                "anio": datos[6].strip(),
+                "hora": datos[7].strip(),
+                "avion": datos[8].strip()
+            }
+
+    return vuelos
+
+def buscar_ruta(origen_actual, destino_final, vuelos, ruta, visitados, ultimo_vuelo=None):
+
+    # Caso base: llegamos al destino
+    if origen_actual == destino_final:
+        return ruta
+
+    # Recorremos todos los vuelos del diccionario
+    for id_vuelo, vuelo in vuelos.items():
+
+        if ultimo_vuelo is not None:
+            if int(vuelo["dia"]) < int(ultimo_vuelo["dia"]):
+                continue
+
+        # El vuelo tiene que salir desde donde estamos
+        if vuelo["origen"] == origen_actual:
+
+            # Vemos si el destino es un lugar en el que ya visitado (asi no ir para atras)
+            if vuelo["destino"] in visitados:
+                continue
+
+            # Si no lo es guardamos vuelo
+            ruta.append(id_vuelo)
+
+            # Marcamos el aeropuerto visitado
+            visitados.append(vuelo["destino"])
+
+
+            # Seguimos buscando desde el nuevo aeropuerto
+            resultado = buscar_ruta(
+                vuelo["destino"],
+                destino_final,
+                vuelos,
+                ruta,
+                visitados, vuelo
+            )
+
+            # Encontramos una ruta válida
+            if resultado is not None:
+                return resultado
+
+            # Este camino no funcionó, volvemos atrás
+            ruta.pop()
+            visitados.pop()
+
+    # No existe ruta
+    return None
+
+def filtrar_vuelos_por_mes(mes):
+
+    vuelos_mes = {}
+
+    for id_vuelo, vuelo in vuelos.items():
+
+        if vuelo["mes"] == str(mes):
+            vuelos_mes[id_vuelo] = vuelo
+
+    return vuelos_mes
+
+# ─────────────────────────────────────────────
+# CREAR RESERVA
+# ─────────────────────────────────────────────
+
+
+def crear_reserva(dni_pasajero, pasajero):
+
+    global reservas, aviones
+
+    print("\n--- NUEVA RESERVA ---")
+
+    nombre = pasajero[1]
 
     while True:
-        numero_reserva = input("\nIngrese número de reserva a cancelar (4 dígitos): ")
 
-        if not numero_reserva.isdigit():
-            print("Error: debe ingresar solo números.\n")
-            continue
+        id_Vdirectos = []
 
-        if len(numero_reserva) != 4:
-            print("Error: el número de reserva debe tener 4 dígitos.\n")
-            continue
+        # ---- SELECCION ORIGEN - DESTINO ----
+        origen, destino = seleccion_OrigenDestino()
 
-        numero_reserva = int(numero_reserva)
-        break
+        # ---- MES ----
+        while True:
 
-    reserva_encontrada = None
+            entrada = input("\nIngrese el mes del viaje (1-12): ").strip()
 
-    for reserva in reservas:
-        if reserva[0] == numero_reserva:
-            reserva_encontrada = reserva
+            if not entrada.isdigit():
+                print("Debe ingresar un número.")
+                continue
+
+            mes = int(entrada)
+
+            if mes < 1 or mes > 12:
+                print("Mes inválido.")
+                continue
+
+            if mes <= 6:
+                print("No puede ser un mes ya pasado")
+                continue
+
             break
 
-    if reserva_encontrada is None:
-        print("\nNo se encontró la reserva.")
+        # ---- FILTRAR VUELOS DEL MES ----
+        vuelos_mes = filtrar_vuelos_por_mes(mes)
+
+        # ---- BUSCAR VUELOS DIRECTOS ----
+        for id_vuelo, vuelo in vuelos_mes.items():
+
+            if vuelo["origen"] == origen and vuelo["destino"] == destino:
+                id_Vdirectos.append(id_vuelo)
+
+        # ---- NO HAY DIRECTOS -> BUSCAR CONEXIÓN ----
+        if len(id_Vdirectos) == 0:
+
+            ruta = []
+            visitados = [origen]
+
+            conexion = buscar_ruta(
+                origen,
+                destino,
+                vuelos_mes,
+                ruta,
+                visitados
+            )
+
+            if conexion is None:
+
+                input("\nNo existe ninguna ruta disponible. Presione enter para continuar:")
+                continue
+
+            print("\nSe encontró la siguiente conexión:\n")
+
+            for i, id_vuelo in enumerate(conexion):
+
+                vuelo = vuelos_mes[id_vuelo]
+
+                print(
+                    f"Vuelo {id_vuelo} | "
+                    f"{vuelo['origen']} → {vuelo['destino']} | "
+                    f"{vuelo['dia']}/{vuelo['mes']} - {vuelo['hora']}"
+                )
+
+                if i < len(conexion)-1:
+                    print("        ↓ CONEXIÓN ↓")
+
+            while True:
+
+                op = input("\n¿Aceptar esta conexión? (s/n): ").lower()
+
+                if op == "s":
+                    ruta_elegida = conexion
+                    break
+
+                elif op == "n":
+                    break
+
+                print("Opción inválida.")
+
+            if op == "s":
+                break
+
+            continue
+
+        # ---- HAY VUELOS DIRECTOS ----
+
+        print("\nVuelos disponibles:\n")
+
+        for i, id_vuelo in enumerate(id_Vdirectos):
+
+            vuelo = vuelos_mes[id_vuelo]
+
+            print(
+                f"{i} - "
+                f"Vuelo {id_vuelo} | "
+                f"{vuelo['dia']}/{vuelo['mes']} | "
+                f"{vuelo['hora']}"
+            )
+
+        while True:
+
+            opcion = input("Seleccione vuelo: ")
+
+            if opcion.isdigit() and int(opcion) in range(len(id_Vdirectos)):
+
+                ruta_elegida = [id_Vdirectos[int(opcion)]]
+                break
+
+        break
+
+    # -----------------------------------------
+    # SELECCION DE ASIENTO, EQUIPAJE Y COMPRA 
+    # -----------------------------------------
+
+     # ---- RESERVAR CADA TRAMO ----
+
+    for id_vuelo in ruta_elegida:
+
+        vuelo = vuelos_mes[id_vuelo]
+
+        id_avion = vuelo["avion"]
+
+        matriz = aviones[id_avion]
+
+        print(f"\nSeleccione asiento para el vuelo {id_vuelo}")
+        print(f"{vuelo['origen']} → {vuelo['destino']}")
+
+        fila, columna = seleccionar_asiento(matriz)
+
+        reservar_asiento(matriz, fila, columna)
+
+        aviones[id_avion] = matriz
+
+        
+        equipaje = seleccionar_equipaje()
+
+        contador = cargar_contador()
+
+        guardar_reserva(
+            contador,
+            id_vuelo,
+            nombre,
+            dni_pasajero,
+            fila,
+            columna,
+            equipaje,
+            vuelo,
+            id_avion,
+            vuelo["tipo"]
+        )
+
+        guardar_contador(contador + 1)
+
+        sumarMillas(dni_pasajero, vuelo)
+
+    guardar_aviones(aviones)
+
+    precio = calcular_precio(
+        ruta_elegida,
+        vuelos_mes,
+        equipaje
+    )
+    
+    print(f"\nSubtotal del viaje: ${precio:,}".replace(",", "."))
+
+    precio = aplicar_millas(precio, dni_pasajero)
+
+    if not confirmar_compra(
+        nombre,
+        ruta_elegida,
+        equipaje,
+        precio,
+        vuelos_mes
+    ):
+        print("Reserva cancelada.")
         return
-    
-    if reserva_encontrada[3] != pasajero[1]:
-        print("\nNo podés cancelar una reserva que no te pertenece.")
+
+    if not realizar_pago(precio):
         return
 
-    reservas.remove(reserva_encontrada)
-    print("\nReserva cancelada correctamente.")
-    
-    # Liberar asiento
-    avion = reserva_encontrada[9]
+   
+    print("\nReserva creada correctamente.")
 
-    if isinstance(avion, list):
-        avion = avion[0]
 
-    matriz = matrices_aviones[avion]
-    fila = reserva_encontrada[4]
-    columna = reserva_encontrada[5]
 
-    liberar_asiento(matriz, fila, columna)
-    
-    #Restar Millas
-    vuelo = reserva_encontrada[10]
-    restarMillas(pasajero, vuelo)
+# ─────────────────────────────────────────────
+# CANCELAR
+# ─────────────────────────────────────────────
+
+def cancelar_reserva(dni_pasajero, pasajero):
+    global reservas, aviones
+
+    numero = input("Número reserva: ")
+
+    reserva = reservas.get(numero)
+
+    if not reserva:
+        print("No existe")
+        return
+
+    if reserva["dni"] != dni_pasajero:
+        print("No es tuya")
+        return
+
+    id_avion = reserva["avion"]
+    matriz = aviones[id_avion]
+
+    liberar_asiento(matriz, reserva["fila"], reserva["columna"])
+
+    aviones[id_avion] = matriz
+    guardar_aviones(aviones)
+
+    del reservas[numero]
+    guardar_reservas(reservas)
+
+    restarMillas(dni_pasajero, reserva["tipo"])
+
+    print("Cancelada")

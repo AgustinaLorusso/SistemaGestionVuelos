@@ -1,0 +1,10 @@
+jperez; 12345678;Juan Perez;juan.perez@gmail.com;$2b$12$BFuiBdllL9RNyWbTIJ8AmuDIsjB2nGUB1qNMU3bwZ6lOw.V7oL97q;100
+Mgomez1; 23456789;Maria Gomez;maria.gomez@gmail.com;$2b$12$I4Ag5gqkryvxY30hXpALo.YjhG2fbz9Epy80OsrSLSI6TAv1wh7q6;300
+carlosD; 34567890;Carlos Diaz;carlos.diaz@gmail.com;$2b$12$JZo9LtDpzQOTK26vuoA1Ju1/OqsY6p06Se86BDnq3N5mRY30zvq7y;600
+analopez2; 45678901;Ana Lopez;ana.lopez@gmail.com;$2b$12$HTuDSqUafrKnveipEPkN0eaZvDu9IpcO/VTjB.4IzuH93CYY5Ri9S;200
+lucf; 56789012;Lucia Fernandez;lucia.fernandez@gmail.com;$2b$12$ltzEuTq2P8TxqtLvYHSPQekr7tjGJljNKv3J/LJkQPBdcbxF3sTwq;0
+ramirezpepe; 67890123;Pedro Ramirez;pedro.ramirez@gmail.com;$2b$12$Vh5vHpgsM62pvmf5eXzlvui9Jrb37Gl3vo7K4f8FFOuWcXYEcC862;100
+camila10;camila rondona;46635620;camirondona@gmail.com;4551afb2e14319832ad9c36e8a521903548210e2f128608249278d76555253d9;500
+mfiore;micaela fiore;43903033;mfiore@gmail.com;49b92d23c6f38556bc6f112524caa322909739ba0430967ff007aba54b999841;700
+agusloru;Agustina Lorusso;43875817;agustinazoelm@gmail.com;8eb5820d0a65cb50a5da5a1f9258d95a801bec0ac29178f1fe2c212b0caec00d;0
+dani1;daniel angel;21465049;danil@gmail.com;4c51c54fdbc03accc94f0abd85588332228c086fc532b5bbc6a9658df29ef3f2;4900

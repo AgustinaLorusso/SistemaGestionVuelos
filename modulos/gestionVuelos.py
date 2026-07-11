@@ -1,13 +1,12 @@
-#IMPORTACIONES
-from .data import destinos ,vuelos, aviones
-from .validaciones import validaciones, modificiar_archivo, cargar_json
-import calendar , random , json
-from functools import reduce
-
-
+from .validaciones import validaciones
+import calendar , random
+from .fileManager import leer_archivo
+from .gestionAsientos import crear_matriz_aleatoria
+#DESTINOS 
+destinos = ("BUENOS AIRES, ARGENTINA" ,"SANTA CRUZ, ARGENTINA", "MENDOZA, ARGENTINA", "MADRID, ESPAÑA","PEKÍN, CHINA", "ROMA, ITALIA","LYON, FRANCIA", "CARACAS, VENEZUELA","BOGOTA, COLOMBIA")
 
 #HORARIOS POSBILES PARA GENERAR VUELOS
-horarios = [ "8.30 AM" , "12.30 AM", "20.30 PM", "23.30 PM"]
+horarios = [ "8:30" , "12:30 ", "20:30 ", "23:30"]
 
 # FUNCIONES DE VALIDACION 
 
@@ -29,11 +28,11 @@ def validar_nroVuelo():
             print("Debe ser un número entero (sin puntos ni letras)")
             continue
 
-        if nroVuelo < 1000 or nroVuelo> 9999:
+        if nroVuelo < 1000 or nroVuelo > 9999:
             print("El número de vuelo debe tener 4 dígitos")
             continue
 
-        return(nroVuelo)
+        return nroVuelo
 
 #Funciones que se invocan en las funciones principales de administrador  (CREAR, MODIFICAR, ELIMINAR VUELOS)
 
@@ -55,7 +54,7 @@ def mostrar_opciones(lista):
     opciones = []
     for i in range(len(lista)):
             opciones.append(count)
-            print(f"{count}. {lista[i]}\n")
+            print(f"{count}. {lista[i]}")
             count = count + 1
     return (opciones)
     
@@ -177,60 +176,43 @@ def Asignacion_FechaVuelo():
     print(f"Fecha válida seleccionada: {dia}/{mes}/2026\n")
     return (mes,dia)
             
-def aviones_por_destino(tipoVuelo):
-    
-    """Funcion que asigna los aviones posibles de uso segun su tipo de vuelo"""
 
-    #AVIONES SEPARADOS POR TIPO DE VUELO (NACIONALES - INTERNACIONALES)
+def asignacion_avion(dia, mes, horario):
 
-    avionesPosibles = []
+    """Asigna el primer avión disponible"""
 
-    for i in range(len(aviones)):
+    vuelos = leer_archivo("Gestion_Vuelos/data/vuelos.txt")
 
-       if aviones[i]["tipoUso"] == tipoVuelo:
+    for numero in range(1, 17):
 
-            avionesPosibles.append(aviones[i])
-    
-    return avionesPosibles
-
-def asignacion_avion(tipoVuelo, dia, mes, horario):
-
-    "Funcion que asigna el avion segun disponibilidad y teniendo en cuenta el destino "
-
-   #Listas de aviones para ese destino
-    aviones_posibles = aviones_por_destino(tipoVuelo)
-    
-    #Verifica cual de los aviones de la lista no esta en uso en las condiciones que puso el administrador.
-    for avion in aviones_posibles:
-        
+        avion = f"av{numero}"
         ocupado = False
 
-        #Accedemos a los datos del vuelo por clave.
-        
         for vuelo in vuelos:
 
             if (
-                vuelo["avion"] == avion and
-                vuelo["fecha"]["dia"] == dia and
-                vuelo["fecha"]["mes"] == mes and
-                vuelo["horario"] == horario):
-                
+                vuelo[8] == avion and      # avión
+                int(vuelo[4]) == dia and   # día
+                int(vuelo[5]) == mes and   # mes
+                vuelo[7] == horario        # horario
+            ):
                 ocupado = True
-        
+                break
+
         if not ocupado:
             return avion
-    
+
     return None
 
-#Implementacion de reduce
+
 def contar_vuelos_por_mes():
 
-    """ Funcion encargada de contar los vuelos"""
+    vuelos = leer_archivo("data/vuelos.txt")
+
     while True:
-        # ---- MES ----
         entrada = input("\nIngrese el mes (1-12): ").strip()
 
-        if not entrada or not entrada.isdigit():
+        if not entrada.isdigit():
             print("Debe ingresar un número.")
             continue
 
@@ -241,20 +223,23 @@ def contar_vuelos_por_mes():
             continue
 
         break
-    vuelos_del_mes = list(filter(lambda vuelo: vuelo[4] == mes, vuelos))
-    
-    total = reduce(lambda acumulado, vuelo: acumulado + 1, vuelos_del_mes, 0)
-    
-    print("\n"
-        f"Vuelos programados en el mes {mes}: {total}\n")
+
+    total = sum(1 for vuelo in vuelos if int(vuelo[5]) == mes)
+
+    print(f"\nVuelos programados en el mes {mes}: {total}\n")
+
+
 
 #Funciones para ADMINISTRADOR 
 
 #Funcion para crear vuelos.
 
+
 def crearVuelo():
 
     """Funcion que le permite al administrador crear vuelos y guardarlos en la base de datos (vuelos) """
+    
+    vuelos= leer_archivo("Gestion_Vuelos/data/vuelos.txt")
     
     while True: 
 
@@ -268,7 +253,7 @@ def crearVuelo():
 
         horario = seleccion_horario()
 
-        avion = asignacion_avion(tipoVuelo, dia, mes, horario)
+        avion = asignacion_avion(dia, mes, horario)
 
         if  avion == None:
          print("Vuelo no pudo ser guardado, todos los aviones estan ocupados para condiciones ingresadas")
@@ -276,8 +261,6 @@ def crearVuelo():
 
         break
     
-    
-
     #Asignacion de nro de identificacion del vuelo.
     idVuelo= random.randint(1000, 9999)
 
@@ -287,22 +270,27 @@ def crearVuelo():
         #Miramos si esta sino volvemos a generar otro hasta que no se repita.
         while idVuelo in vuelo:
             idVuelo= random.randint(1000, 9999)
-    
-    vuelo = {
-            "origen": origen,
-            "destino": destino,
 
-            "fecha": {
-                "dia": dia,
-                "mes": mes,
-                "anio": 2026
-            },
-            "avion": avion
-    }
+    with open("data/aviones.txt", "a", encoding="utf-8") as archivo:
 
-    cargar_json("data/vuelos.json",idVuelo,vuelo)
+        nro_avion = random.randint(1, 999)
+        avion = f"av{nro_avion}"
 
-   
+        asientos = crear_matriz_aleatoria()
+
+        # Convierte la matriz a una lista plana
+        asientos_planos = [asiento for fila in asientos for asiento in fila]
+
+        # Une todo con comas
+        asientos_txt = ",".join(asientos_planos)
+
+        archivo.write(f"{avion};{asientos_txt}\n")
+
+    with open("data/vuelos.txt", "a", encoding="utf-8") as archivo:
+        archivo.write(
+        f"\n{idVuelo};{tipoVuelo};{origen};{destino};{dia};{mes};2026;{horario};{avion}"
+        )
+
         
     # MOSTRAR RESUMEN
 
@@ -318,94 +306,70 @@ def crearVuelo():
     print("¡El vuelo se guardo exitosamente!")
 
 
-#Funcion para modificar un vuelo 
-def modificarVuelo():
-
-    """Funcion que permite al administrador modificar Fecha/Hora de un vuelo """
-    
-    idVuelo= validar_nroVuelo()
-    idVuelo = str(idVuelo)
-    with open ("data/vuelos.json","r",encoding="utf-8") as archivo:
-        vuelos = json.load(archivo)
-    while idVuelo not in vuelos:
-        print("El vuelo ingresado no existe")
-        idVuelo= validar_nroVuelo()
-        idVuelo = str(idVuelo)
-    
-    
-    opciones=[1,2] #opciones de ingreso del usuario
-
-    print("Ingrese el numero correspondiente al dato a modificar:\n" f"1. Fecha\n" f"2. Hora\n")
-    
-    datoAmodificar= validaciones(opciones)
-
-    while datoAmodificar is False:
-        print("Ingrese el numero correspondiente al dato a modificar:\n" f"1. Fecha\n" f"2. Hora\n")
-        datoAmodificar= validaciones(opciones)
-
-    if datoAmodificar==1:
-        #Invocamos funcion para pedir nueva fecha en que se quiere generar el vuelo.
-        mes,dia=Asignacion_FechaVuelo()  
-
-        modificiar_archivo(1,"data/vuelos.json",idVuelo,"fecha", "mes",mes)
-        modificiar_archivo(1,"data/vuelos.json",idVuelo,"fecha","dia",dia)
-
-        with open ("data/vuelos.json","r",encoding="utf-8") as archivo:
-            vuelos = json.load(archivo)
-        vuelo = vuelos[idVuelo]
-
-        print("NUMERO DE VUELO:", idVuelo)
-        print("\n--- RESUMEN DE VUELO MODIFICADO ---\n")
-        print("ORIGEN:", vuelo["origen"])
-        print("DESTINO:", vuelo["destino"] )
-        print("FECHA:", dia,"/", mes,"/",2026)
-        
-
-        print("Dia del vuelo se ha modificado con exito")
-
-    else: #CASO DE QUERER MODIFICAR EL HORARIO
-        vuelo = vuelos [idVuelo]
-        horario=seleccion_horario()
-        tipoVuelo = vuelo["tipo"]
-        mes = vuelo ["fecha"]["dia"]
-        dia = vuelo["fecha"]["mes"]
-        #VALIDAR EL AVION QUE ESTE DISPONIBLE A ESE HORARIO 
-        avion = asignacion_avion(tipoVuelo, dia, mes, horario)
-
-        if  avion == None:
-            print("Vuelo no pudo ser modificado")
-            print("Todos los aviones estan en uso para las condiciones ingresadas.")
-        else:
-
-            modificiar_archivo(2,"data/vuelos.json",idVuelo,"horario",horario)
-            modificiar_archivo(2,"data/vuelos.json",idVuelo,"avion",dia)
-            
-            print("\n--- RESUMEN DE VUELO MODIFICADO ---\n")
-            print("NUMERO DE VUELO:", idVuelo)
-            print("ORIGEN:", vuelo["origen"])
-            print("DESTINO:", vuelo["destino"])
-            print("FECHA:", dia,"/", mes,"/",2026)
-            print("HORARIO", horario)
-           
-
-            print("Horario del vuelo se modifico con exito")
-
 #Funcion para eliminar un vuelo
 
 def eliminarVuelo():
+   
+    # Cargar vuelos en lista
+    vuelos = leer_archivo("data/vuelos.txt")
+
+
+    # Buscar y eliminar
     while True:
-        nroVuelo = validar_nroVuelo()
+        nroVuelo = str(validar_nroVuelo())
         encontrado = False
 
         for v in vuelos:
             if v[0] == nroVuelo:
+                print("Vuelo encontrado:")
+                print("Origen:", v[1])
+                print("Destino:", v[2])
+
+                confirmacion = input("¿Eliminar vuelo? (s/n): ").lower()
+
+                if confirmacion != "s":
+                    print("Operación cancelada.")
+                    return
+
                 vuelos.remove(v)
-                print("Vuelo eliminado correctamente.")
                 encontrado = True
+                print("Vuelo eliminado correctamente.")
                 break
-        
+
         if encontrado:
             break
         else:
             print("No existe ese vuelo.")
             return
+
+   # Reescribir archivo TXT
+    with open("data/vuelos.txt", "w", encoding="utf-8") as archivo:
+        for v in vuelos:
+            archivo.write(";".join(map(str, v)) + "\n")
+
+def cargar_vuelos():
+    vuelos = {}
+
+    with open("data/vuelos.txt", "r", encoding="utf-8") as archivo:
+        for linea in archivo:
+            linea = linea.strip()
+
+            if not linea:
+                continue
+
+            datos = linea.split(";")
+
+            id_vuelo = datos[0].strip()
+
+            vuelos[id_vuelo] = {
+                "tipo": datos[1].strip(),
+                "origen": datos[2].strip(),
+                "destino": datos[3].strip(),
+                "dia": datos[4].strip(),
+                "mes": datos[5].strip(),
+                "anio": datos[6].strip(),
+                "hora": datos[7].strip(),
+                "avion": datos[8].strip()
+            }
+
+    return vuelos

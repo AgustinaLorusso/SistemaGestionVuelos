@@ -1,84 +1,107 @@
 import random
 
-def crear_matriz():
-    """Función para crear una matriz de asientos con valores aleatorios "D" (disponible) y "R" (reservado)"""
-    matriz = []
-    for i in range(27):
-        fila = []
-        for j in range(7):
-            if random.randint(0, 1) == 0:
-                fila.append("D")
-            else:
-                fila.append("R")
-        matriz.append(fila)
-    return matriz
+# ─────────────────────────────
+# MATRICES
+# ─────────────────────────────
 
 
-def mostrar_matriz(matriz):
-    """Función para mostrar la matriz de asientos de manera legible."""
-    print("\n      1  2  3  4  5  6  7")
+def crear_matriz_aleatoria():
+    return [["R" if random.random() < 0.2 else "D" for _ in range(7)] for _ in range(27)]
 
-    for i in range(27):
-        print(f"{i + 1:3}   ", end="")
 
-        for j in range(7):
-            print(f"{matriz[i][j]:2}", end=" ")
+def plana_a_matriz(lista_plana):
+    return [lista_plana[i*7:(i+1)*7] for i in range(27)]
 
+
+def matriz_a_plana(matriz):
+    return [celda for fila in matriz for celda in fila]
+
+
+def mostrar_columnas(total, columna=1):
+    if columna > total:
         print()
+        return
+
+    print(columna, end=" ")
+    mostrar_columnas(total, columna + 1) # recursividad
+
+
+def mostrar_fila(fila, columna=0):
+    if columna == len(fila):
+        print()
+        return
+
+    print(fila[columna], end=" ")
+    mostrar_fila(fila, columna + 1) # recursividad
+
+
+def mostrar_matriz_avion(matriz, fila=0):
+    if fila == 0:
+        print("\n   ", end="")
+        mostrar_columnas(len(matriz[0]))
+
+    if fila == len(matriz):
+        return
+
+    print(f"{fila + 1:2} ", end="")
+    mostrar_fila(matriz[fila])
+
+    mostrar_matriz_avion(matriz, fila + 1)
 
 
 def reservar_asiento(matriz, fila, columna):
-    """Función para reservar un asiento específico en la matriz."""
-
-    if fila < 1 or columna < 1:
-        print("La fila y columna deben ser mayores a 0.")
+    if 1 <= fila <= 27 and 1 <= columna <= 7:
+        if matriz[fila-1][columna-1] == "D":
+            matriz[fila-1][columna-1] = "R"
+            return True
+        print("Asiento ocupado.")
         return False
-
-    fila -= 1
-    columna -= 1
-
-    if fila >= 27 or columna >= 7:
-        print("La fila o columna ingresada no existe.")
-        return False
-
-    if matriz[fila][columna] == "D":
-        matriz[fila][columna] = "R"
-        print("El asiento ha sido reservado correctamente.")
-        return True
-    
-    if matriz[fila][columna] == "R":
-        print("El asiento se encuentra ocupado, elija otro.")
-
+    print("Fuera de rango.")
     return False
 
 
-def pedir_asiento(matriz):
-    """Pide al usuario un asiento válido hasta que se reserve correctamente"""
+# ─────────────────────────────
+# PERSISTENCIA AVIONES TXT
+# ─────────────────────────────
 
-    while True:
-        try:
-            fila = int(input("Ingrese fila: "))
-            columna = int(input("Ingrese columna: "))
-        except ValueError:
-            print("Error: debe ingresar números")
-            continue
+def cargar_matrices_aviones():
+    aviones = {}
 
-        if fila < 1 or columna < 1 or fila > 27 or columna > 7:
-            print("Error: asiento fuera de rango. Ingrese otro.")
-            continue
+    columnas = 10  # ajustalo si tu avión tiene otro ancho
 
-        if reservar_asiento(matriz, fila, columna):
-            return fila, columna
+    with open("data/aviones.txt", "r", encoding="utf-8") as archivo:
+        for linea in archivo:
+            linea = linea.strip()
 
-        print("Asiento ocupado, elija otro.")
+            if not linea:
+                continue
+
+            partes = linea.split(";")
+
+            id_avion = partes[0]
+            asientos = partes[1].split(",")
+
+            matriz = []
+
+            for i in range(0, len(asientos), columnas):
+                matriz.append(asientos[i:i + columnas])
+
+            aviones[id_avion] = matriz
+
+    return aviones
 
 
-#se crea una matriz por avión
-matrices_aviones = {
-    "av1": crear_matriz(),
-    "av2": crear_matriz(),
-    "av3": crear_matriz(),
-    "av4": crear_matriz(),
-    "av5": crear_matriz(),
-    "av6": crear_matriz()
-}
+def guardar_aviones(aviones):
+    with open("data/aviones.txt", "w", encoding="utf-8") as f:
+        for id_avion, matriz in aviones.items():
+            plano = matriz_a_plana(matriz)
+            linea = id_avion + ";" + ",".join(plano)
+            f.write(linea + "\n")
+
+
+def liberar_asiento(matriz, fila, columna):
+    if 1 <= fila <= 27 and 1 <= columna <= 7:
+        if matriz[fila-1][columna-1] == "R":
+            matriz[fila-1][columna-1] = "D"
+            return True
+    return False
