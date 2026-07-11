@@ -14,8 +14,6 @@ def interpretar_intencion(mensaje):
    while True:
 
       mensaje = mensaje.lower()
-      
-
 
       for palabra in cancelar:
 

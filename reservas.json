@@ -1,0 +1,134 @@
+{
+    "3491":
+        {
+            "id_vuelo": 1000,
+            "nombre": "Juan Perez",
+            "dni": "12345678",
+            "fila": 2,
+            "columna": 3,
+            "dia": 1,
+            "mes": 1,
+            "equipaje": "Sin equipaje",
+            "avion": "av1",
+            "tipo": "1"
+        },
+    "3495":
+        {
+            "id_vuelo": 1001,
+            "nombre": "Maria Gomez",
+            "dni": "23456789",
+            "fila": 5,
+            "columna": 1,
+            "dia": 15,
+            "mes": 2,
+            "equipaje": "Equipaje bodega",
+            "avion": "av3",
+            "tipo": "2"
+        },
+    "3493":
+        {
+            "id_vuelo": 1002,
+            "nombre": "Carlos Diaz",
+            "dni": "34567890",
+            "fila": 10,
+            "columna": 4,
+            "dia": 5,
+            "mes": 1,
+            "equipaje": "Equipaje de mano",
+            "avion": "av2",
+            "tipo": "1"
+        },
+    "3503":
+        {
+            "id_vuelo": 1003,
+            "nombre": "Ana Lopez",
+            "dni": "45678901",
+            "fila": 7,
+            "columna": 2,
+            "dia": 10,
+            "mes": 2,
+            "equipaje": "Equipaje bodega",
+            "avion": "av4",
+            "tipo": "2"
+        },
+    "3497":
+        {
+        
+            "id_vuelo": 1004,
+            "nombre": "Lucia Fernandez",
+            "dni": "56789012",
+            "fila": 12,
+            "columna": 6,
+            "dia": 20,
+            "mes": 2,
+            "equipaje": "Sin equipaje",
+            "avion": "av5",
+            "tipo": "2"
+        },
+    " 3492":
+        {
+            "id_vuelo":1005,
+            "nombre": "Pedro Ramirez",
+            "dni": "67890123",
+            "fila": 3,
+            "columna": 2,
+            "dia": 1,
+            "mes": 1,
+            "equipaje": "Equipaje de mano",
+            "avion": "av1",
+            "tipo": "1"
+        },
+    " 3505":
+        {
+            "id_vuelo":1006,
+            "nombre": "Juan Perez",
+            "dni": "12345678",
+            "fila": 6,
+            "columna": 4,
+            "dia": 3,
+            "mes": 2,
+            "equipaje": "Sin equipaje",
+            "avion": "av3",
+            "tipo": "2"
+        },
+    "3501":
+        {
+            
+            "id_vuelo": 1007,
+            "nombre": "Maria Gomez",
+            "dni": "23456789",
+            "fila": 8,
+            "columna": 1,
+            "dia": 25,
+            "mes": 1,
+            "equipaje": "Equipaje bodega",
+            "avion": "av1",
+            "tipo": "1"
+        },
+    " 3498":
+        {
+            "id_vuelo":1008,
+            "nombre": "Carlos Diaz",
+            "dni": "34567890",
+            "fila": 14,
+            "columna": 5,
+            "dia": 20,
+            "mes": 2,
+            "equipaje": "Equipaje de mano",
+            "avion": "av5",
+            "tipo": "2"
+        },
+    "3504":
+        {
+            "id_vuelo": 1009,
+            "nombre": "Ana Lopez",
+            "dni": "45678901",
+            "fila": 9,
+            "columna": 3,
+            "dia": 10,
+            "mes": 2,
+            "equipaje": "Sin equipaje",
+            "avion": "av4",
+            "tipo": "2"
+        }
+}

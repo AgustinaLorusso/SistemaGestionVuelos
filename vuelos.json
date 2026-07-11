@@ -1,0 +1,136 @@
+{
+    "1001": {
+        "tipo": "internacional",
+        "origen": "MADRID, ESPANIA",
+        "destino": "PEKIN, CHINA",
+        "fecha": {
+            "dia": 1,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "8:30",
+        "avion": "av4"
+    },
+    "1002": {
+        "tipo": "internacional",
+        "origen": "PEKIN, CHINA",
+        "destino": "MADRID, ESPANIA",
+        "fecha": {
+            "dia": 1,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "16:30",
+        "avion": "av5"
+    },
+    "1003": {
+        "tipo": "internacional",
+        "origen": "ROMA, ITALIA",
+        "destino": "LYON, FRANCIA",
+        "fecha": {
+            "dia": 2,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "12:30",
+        "avion": "av6"
+    },
+    "1004": {
+        "tipo": "internacional",
+        "origen": "LYON, FRANCIA",
+        "destino": "ROMA, ITALIA",
+        "fecha": {
+            "dia": 2,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "20:30",
+        "avion": "av7"
+    },
+    "1005": {
+        "tipo": "nacional",
+        "origen": "MENDOZA, ARGENTINA",
+        "destino": "SANTA CRUZ, ARGENTINA",
+        "fecha": {
+            "dia": 3,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "8:30",
+        "avion": "av1"
+    },
+    "1006": {
+        "tipo": "nacional",
+        "origen": "SANTA CRUZ, ARGENTINA",
+        "destino": "MENDOZA, ARGENTINA",
+        "fecha": {
+            "dia": 3,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "12:30",
+        "avion": "av2"
+    },
+    "1007": {
+        "tipo": "internacional",
+        "origen": "CARACAS, VENEZUELA",
+        "destino": "BOGOTA, COLOMBIA",
+        "fecha": {
+            "dia": 4,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "8:30",
+        "avion": "av8"
+    },
+    "1008": {
+        "tipo": "internacional",
+        "origen": "BOGOTA, COLOMBIA",
+        "destino": "CARACAS, VENEZUELA",
+        "fecha": {
+            "dia": 4,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "16:30",
+        "avion": "av9"
+    },
+    "1009": {
+        "tipo": "internacional",
+        "origen": "MADRID, ESPANIA",
+        "destino": "ROMA, ITALIA",
+        "fecha": {
+            "dia": 5,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "12:30",
+        "avion": "av10"
+    },
+    "1010": {
+        "tipo": "internacional",
+        "origen": "ROMA, ITALIA",
+        "destino": "MADRID, ESPANIA",
+        "fecha": {
+            "dia": 5,
+            "mes": 6,
+            "anio": 2026
+        },
+        "horario": "20:30",
+        "avion": "av4"
+    },
+    "9663": {
+        "origen": "LYON, FRANCIA",
+        "destino": "BUENOS AIRES, ARGENTINA",
+        "fecha": {
+            "dia": 3,
+            "mes": 3,
+            "anio": 2026
+        },
+        "avion": {
+            "nroAvion": "av1",
+            "tipoUso": "nacional",
+            "cantAsientos": 120
+        }
+    }
+}

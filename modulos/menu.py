@@ -95,7 +95,7 @@ def login_administrador():
         login_ok = False
 
         for administrador in administradores:
-            if administrador[2] == email and administrador[3] == contraseña:
+            if administrador["email"] == email and administrador["password"] == contraseña:
                 print("\nLogin correcto.")
                 login_ok = True
                 break
